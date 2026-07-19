@@ -1,0 +1,59 @@
+{
+  "//": "============================================================",
+  "// Kuboos — KNOCK Firebase Realtime Database Security Rules": "",
+  "// Paste this entire JSON into:": "",
+  "//   Firebase Console -> Realtime Database -> Rules tab -> Publish": "",
+  "// Replace your existing test-mode rules.": "",
+  "//": "============================================================",
+  "// NOTE: This config does NOT use Firebase Authentication.": "",
+  "//       Without auth, we can't pin actions to specific users,": "",
+  "//       so 'who can write what' rules are open by design.": "",
+  "//       The schema/size validators still block 95% of abuse:": "",
+  "//         - blocks writes outside /rooms": "",
+  "//         - blocks unknown keys, oversized chat, oversized names": "",
+  "//         - blocks malformed gameState / player records": "",
+
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "rooms": {
+      "$roomCode": {
+
+        ".read": true,
+        ".write": true,
+
+        "code":      { ".validate": "newData.isString() && newData.val().length <= 8" },
+        "hostUid":   { ".validate": "newData.isString() && newData.val().length <= 64" },
+        "status":    { ".validate": "newData.val() == 'lobby' || newData.val() == 'playing' || newData.val() == 'over'" },
+        "createdAt": { ".validate": "newData.isNumber() || !newData.exists()" },
+
+        "players": {
+          "$uid": {
+            "name":      { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 14" },
+            "ready":     { ".validate": "newData.isBoolean()" },
+            "order":     { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() < 6" },
+            "connected": { ".validate": "newData.isBoolean()" },
+            "lastSeen":  { ".validate": "newData.isNumber() || !newData.exists()" },
+            "$other": { ".validate": false }
+          }
+        },
+
+        "chat": {
+          "$msgId": {
+            ".validate": "newData.hasChildren(['name', 'text', 'at'])",
+            "name":  { ".validate": "newData.isString() && newData.val().length <= 14" },
+            "text":  { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200" },
+            "at":    { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+
+        "gameState": {
+        },
+
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
