@@ -59,14 +59,16 @@ function Card({ card, faceUp, size, lifted, className = '', onClick, style, posi
   const cw = size?.w || 76;
   const ch = size?.h || 108;
   const showFace = faceUp && card;
+  // Both faces stay mounted so toggling `flipped` plays a real 3D flip
+  // (backface-visibility hides whichever side points away).
   return (
     <div
       className={"card " + (showFace ? 'flipped ' : '') + (lifted ? 'lifted ' : '') + className}
       style={{ '--cw': cw + 'px', '--ch': ch + 'px', ...(style || {}) }}
       onClick={onClick}
     >
-      {!showFace && <CardBack size={size} positionLabel={positionLabel} />}
-      {showFace && <CardFace card={card} size={size} />}
+      <CardBack size={size} positionLabel={positionLabel} />
+      {card && <CardFace card={card} size={size} />}
     </div>
   );
 }

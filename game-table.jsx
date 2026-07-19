@@ -196,13 +196,14 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
     if (phase !== PHASES.TURN_START) return;
     if (paused) return;
     if (drawer.isBot) return;
+    if (isLocal && needPass) return; // pass-the-device screen is up — don't draw behind it
     if (window.Voice) window.Voice.say(`${drawer.name}, your turn`, { key: 'turn-' + currentPlayer, cooldown: 0 });
     const t = setTimeout(() => {
       toast(`⏰ Auto-drawing for ${drawer.name}`);
       handleDraw();
     }, 15000);
     return () => clearTimeout(t);
-  }, [phase, currentPlayer, paused]);
+  }, [phase, currentPlayer, paused, needPass]);
   React.useEffect(() => {
     if (phase !== PHASES.TURN_START) return;
     if (paused) return;
@@ -219,7 +220,7 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
       handleDraw();
     }, BOT_DELAY.thinkStart);
     return () => clearTimeout(t);
-  }, [phase, currentPlayer]);
+  }, [phase, currentPlayer, paused]);
 
   // ----- Local-mode pass-the-device: between turns, show pass screen for next human -----
   React.useEffect(() => {
@@ -268,7 +269,7 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
     timers.push(timeoutT);
 
     return () => { resolved = true; timers.forEach(clearTimeout); clearInterval(tick); };
-  }, [phase]);
+  }, [phase, paused]);
 
   // ----- Discard round: countdown + bots opt in if they hold a match -----
   React.useEffect(() => {
@@ -288,7 +289,7 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
     }
     const end = setTimeout(() => { clearInterval(tick); processDiscardRound(); }, DISCARD_ROUND_SECONDS * 1000);
     return () => { clearInterval(tick); botTimers.forEach(clearTimeout); clearTimeout(end); };
-  }, [phase]);
+  }, [phase, paused]);
 
   // ----- Power 7s timer (with auto-pick fallback for human) -----
   React.useEffect(() => {
@@ -310,7 +311,7 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
       return s - 1;
     }), 1000);
     return () => clearInterval(tick);
-  }, [phase, drawer]);
+  }, [phase, drawer, paused]);
 
   function autoUsePowerForHuman() {
     const rand = (n) => Math.floor(Math.random() * Math.max(1, n));
@@ -359,6 +360,7 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
   // ----- Bot uses power automatically -----
   React.useEffect(() => {
     if (!drawer.isBot) return;
+    if (paused) return;
     const mem = botMemoriesRef.current[drawer.id];
     if (phase === PHASES.POWER_PEEK_OWN) {
       const slot = botPickPowerOwn(drawer, hands, mem);
@@ -412,11 +414,12 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
       }, BOT_DELAY.powerSwap);
       return () => clearTimeout(t);
     }
-  }, [phase]);
+  }, [phase, paused]);
 
   // ----- Bot picks slot when buzz won -----
   React.useEffect(() => {
     if (phase !== PHASES.BUZZ_RESOLVE) return;
+    if (paused) return;
     if (!players[buzzWinner]?.isBot) return;
     const bot = players[buzzWinner];
     const mem = botMemoriesRef.current[bot.id];
@@ -426,7 +429,7 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
       performBuzzSwap(slot);
     }, BOT_DELAY.buzzPickSlot);
     return () => clearTimeout(t);
-  }, [phase, buzzWinner]);
+  }, [phase, buzzWinner, paused]);
 
   // ======= Actions =======
 
@@ -632,12 +635,12 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
       for (const p of players) {
         if (!p.isBot) continue;
         const m = botMemoriesRef.current[p.id];
-        const wasMine = botKnowsCard(m, 0, swapMine);
+        const wasMine = botKnowsCard(m, meId, swapMine);
         const wasTheirs = botKnowsCard(m, toPid, toSlot);
         if (wasMine) botRememberCard(m, toPid, toSlot, wasMine);
         else botForgetSlot(m, toPid, toSlot);
-        if (wasTheirs) botRememberCard(m, 0, swapMine, wasTheirs);
-        else botForgetSlot(m, 0, swapMine);
+        if (wasTheirs) botRememberCard(m, meId, swapMine, wasTheirs);
+        else botForgetSlot(m, meId, swapMine);
       }
       setAnimation(null);
       toast('Swap complete!');
@@ -646,15 +649,6 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
   }
 
   // ----- Discard claim -----
-  function openDiscardClaim() {
-    if (!drawnCard || phase === PHASES.OVER || phase === PHASES.PEEK) {
-      toast('No card to claim against');
-      return;
-    }
-    setDiscardingPlayer(0);
-    // Don't change phase — just open overlay
-  }
-
   function performDiscardClaim(slotIdxOrList) {
     const claimer = discardingPlayer;
     // Accept single int or array; normalize to array
@@ -693,35 +687,6 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
         : 'Better luck next time! +2 cards';
       showAchievement('fail', '💥 ' + TAMIL_FAIL + '!', sub);
       finishHumanDiscard();
-    }
-  }
-
-  function botPerformDiscardClaim(bot, slotIdx) {
-    const card = hands[bot.id][slotIdx];
-    if (!drawnCard) return; // guard — drawn card already gone
-    if (card.rank === drawnCard?.rank) {
-      const oldHand = hands[bot.id];
-      const newHands = { ...hands };
-      newHands[bot.id] = oldHand.filter((_, idx) => idx !== slotIdx);
-      setHands(newHands);
-      // Only discard the matched HAND card — drawnCard stays live on the table
-      setDiscard(d => [card, ...d]);
-      updateBotMemoryOnDiscardSuccess(bot.id, slotIdx);
-      AudioMgr.playSfx('discard-good');
-      showAchievement('win', `🎉 ${bot.name} — ${tamilCheer()}!`, `Discarded a ${card.rank}`);
-      // Don't call nextTurn() — game continues in current phase (buzz/power still active)
-    } else {
-      const { drawn: penalty, deck: nd, discard: ndisc } = drawFromDeck(deck, discard, 2);
-      const oldHand = hands[bot.id];
-      const newHands = { ...hands };
-      newHands[bot.id] = [...penalty.slice(0, 1), ...oldHand, ...penalty.slice(1, 2)];
-      setHands(newHands);
-      setDeck(nd);
-      setDiscard(ndisc);
-      updateBotMemoryOnPenaltyAdd(bot.id, oldHand, newHands[bot.id]);
-      AudioMgr.playSfx('discard-bad');
-      showAchievement('fail', `💥 ${bot.name} — ${TAMIL_FAIL}!`, 'Better luck next time! +2 cards');
-      // Don't call nextTurn() — penalty added, game continues in current phase
     }
   }
 
@@ -847,7 +812,6 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
   const otherPlayers = players.filter(p => p.id !== meId);
   const buzzCanFire = phase === PHASES.BUZZ && !me.isBot && currentPlayer !== meId;
   const knockEnabled = isMyTurn && phase === PHASES.TURN_START && hands[meId].length <= 2;
-  const discardEnabled = !!drawnCard && !discardingPlayer;
   const peekActive = peekTarget && Date.now() < peekTarget.until;
 
   return (
@@ -922,7 +886,7 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
 
               <div style={{ position: 'relative', minWidth: 64, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 {drawnCard ? (
-                  <Card card={drawnCard} faceUp size={{ w: 64, h: 90 }} />
+                  <Card key={drawnCard.id} card={drawnCard} faceUp size={{ w: 64, h: 90 }} className="drawn-pop" />
                 ) : (
                   <div style={{ width: 64, height: 90, border: '2px dashed rgba(255,255,255,0.2)', borderRadius: 10 }} />
                 )}
@@ -931,7 +895,7 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
 
               <div className="discard-stack">
                 {discard.length > 0 ? (
-                  <Card card={discard[0]} faceUp size={{ w: 56, h: 80 }} />
+                  <Card key={discard[0].id} card={discard[0]} faceUp size={{ w: 56, h: 80 }} className="discard-drop" />
                 ) : (
                   <div style={{ width: 56, height: 80, border: '2px dashed rgba(255,255,255,0.2)', borderRadius: 10 }} />
                 )}
@@ -1086,7 +1050,7 @@ function PhaseIndicator({ phase, drawnCard, drawer, buzzSecondsLeft, powerSecond
   if (phase === PHASES.POWER_PEEK_OWN) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-        <CountdownRing secondsLeft={powerSecondsLeft} total={7} size={60} />
+        {isMyTurn && <CountdownRing secondsLeft={powerSecondsLeft} total={POWER_SECONDS} size={60} />}
         <div className="power-banner">{isMyTurn ? '7/8 — Tap your own card' : `${drawer.name} peeking own card`}</div>
       </div>
     );
@@ -1094,7 +1058,7 @@ function PhaseIndicator({ phase, drawnCard, drawer, buzzSecondsLeft, powerSecond
   if (phase === PHASES.POWER_PEEK_OTHER) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-        <CountdownRing secondsLeft={powerSecondsLeft} total={7} size={60} />
+        {isMyTurn && <CountdownRing secondsLeft={powerSecondsLeft} total={POWER_SECONDS} size={60} />}
         <div className="power-banner">{isMyTurn ? '9/10 — Tap an opponent card' : `${drawer.name} peeking opponent`}</div>
       </div>
     );
@@ -1105,7 +1069,7 @@ function PhaseIndicator({ phase, drawnCard, drawer, buzzSecondsLeft, powerSecond
     if (isMyTurn && swapMine != null && swapTheirs) msg = 'Confirm the swap';
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-        <CountdownRing secondsLeft={powerSecondsLeft} total={7} size={60} />
+        {isMyTurn && <CountdownRing secondsLeft={powerSecondsLeft} total={POWER_SECONDS} size={60} />}
         <div className="power-banner">{msg}</div>
       </div>
     );
@@ -1149,7 +1113,7 @@ function MyHand({ hand, phase, peekTarget, swapMine, discardingPlayer, isMyTurn,
 
 function OpponentMini({ player, hand, isActive, revealedSlot, selectable, selectedSlot, onSlotClick, animatingSlot }) {
   return (
-    <div style={{
+    <div className={isActive ? 'opp-active' : ''} style={{
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -1167,7 +1131,7 @@ function OpponentMini({ player, hand, isActive, revealedSlot, selectable, select
         </span>
         <span style={{ opacity: 0.5 }}>·{hand.length}</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, auto)', gap: 3, justifyContent: 'center' }}>
+      <div className="hand-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, auto)', gap: 3, justifyContent: 'center' }}>
         {handDisplayOrder(hand.length).map((i) => {
           const c = hand[i];
           const revealed = revealedSlot === i;

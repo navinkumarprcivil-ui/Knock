@@ -331,7 +331,7 @@ html, body {
   letter-spacing: 2px;
   text-align: center;
   pointer-events: none;
-  animation: ach-pop 1.2s ease forwards;
+  animation: ach-pop 2.8s ease forwards;
   box-shadow: 0 12px 40px rgba(0,0,0,0.5);
 }
 .achievement-banner.win {
@@ -354,10 +354,10 @@ html, body {
 }
 @keyframes ach-pop {
   0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
-  20% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
-  35% { transform: translate(-50%, -50%) scale(1); }
-  85% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(0.95); opacity: 0; }
+  8% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+  14% { transform: translate(-50%, -50%) scale(1); }
+  88% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.92); opacity: 0; }
 }
 .card-face {
   background: linear-gradient(180deg, #fff 0%, #f4eed8 100%);
@@ -944,6 +944,10 @@ html, body {
   0%, 100% { filter: brightness(1); }
   50% { filter: brightness(1.15); }
 }
+
+/* ======= Icon buttons (sound / help / exit / chat) ======= */
+.icon-btn {
+  background: rgba(0,0,0,0.35);
   border: 1px solid rgba(255,255,255,0.15);
   color: white;
   width: 38px;
@@ -990,14 +994,15 @@ html, body {
   transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
   filter: drop-shadow(0 8px 24px rgba(0,0,0,0.6));
 }
+/* Scale/glow animations live on the SLOT (not the .card) so they never
+   override the card's own rotateY flip transform. */
 .glow-flash {
-  animation: glow-flash 1.2s ease-out 2;
+  animation: glow-flash 1.2s ease-out 2, card-pop 2.4s ease;
   outline: 3px solid var(--gold-soft);
   outline-offset: 2px;
   border-radius: 10px;
   z-index: 50;
 }
-.glow-flash .card { animation: card-pop 2.4s ease; }
 @keyframes glow-flash {
   0% { box-shadow: 0 0 0 0 var(--gold); }
   35% { box-shadow: 0 0 40px 18px var(--gold); }
@@ -1011,15 +1016,15 @@ html, body {
 }
 .peek-flash {
   z-index: 60;
+  animation: peek-flash 3.4s ease;
 }
 .peek-flash .card {
-  animation: peek-flash 3.4s ease;
   filter: drop-shadow(0 10px 26px rgba(0,0,0,0.6));
 }
 @keyframes peek-flash {
   0% { transform: scale(1); }
-  12% { transform: scale(1.85); box-shadow: 0 0 36px var(--gold); }
-  88% { transform: scale(1.85); box-shadow: 0 0 36px var(--gold); }
+  12% { transform: scale(1.85); }
+  88% { transform: scale(1.85); }
   100% { transform: scale(1); }
 }
 
@@ -1096,4 +1101,111 @@ html, body {
 @keyframes spot-pop {
   from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
   to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ============================================================
+   Cinematic layer — screen transitions, card motion, glow
+   ============================================================ */
+
+/* Every screen glides in like a scene change */
+.screen {
+  animation: screen-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Cards deal into hands with a staggered arc (re-runs whenever a slot
+   receives a new card, since slots are keyed by card id) */
+.hand-row .hand-slot,
+.hand-grid .hand-slot {
+  animation: deal-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.hand-row .hand-slot:nth-child(1), .hand-grid .hand-slot:nth-child(1) { animation-delay: 0.03s; }
+.hand-row .hand-slot:nth-child(2), .hand-grid .hand-slot:nth-child(2) { animation-delay: 0.09s; }
+.hand-row .hand-slot:nth-child(3), .hand-grid .hand-slot:nth-child(3) { animation-delay: 0.15s; }
+.hand-row .hand-slot:nth-child(4), .hand-grid .hand-slot:nth-child(4) { animation-delay: 0.21s; }
+.hand-row .hand-slot:nth-child(5), .hand-grid .hand-slot:nth-child(5) { animation-delay: 0.27s; }
+.hand-row .hand-slot:nth-child(6), .hand-grid .hand-slot:nth-child(6) { animation-delay: 0.33s; }
+.hand-row .hand-slot:nth-child(n+7), .hand-grid .hand-slot:nth-child(n+7) { animation-delay: 0.39s; }
+@keyframes deal-in {
+  from { opacity: 0; transform: translateY(-26px) rotate(-5deg) scale(0.7); }
+  to   { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+}
+
+/* Drawn card slides out of the deck and flips face-up mid-flight.
+   Applied to the .card itself, so it must END on the flipped transform. */
+.card.drawn-pop {
+  animation: drawn-pop 0.65s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes drawn-pop {
+  0%   { transform: translate(-64px, 4px) rotateY(0deg) scale(0.82); opacity: 0.4; }
+  55%  { transform: translate(-12px, -10px) rotateY(120deg) scale(1.12); opacity: 1; }
+  100% { transform: translate(0, 0) rotateY(180deg) scale(1); }
+}
+
+/* Top of the discard pile drops in with a settle */
+.card.discard-drop {
+  animation: discard-drop 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+}
+@keyframes discard-drop {
+  0%   { transform: translateY(-34px) rotate(9deg) rotateY(180deg) scale(1.18); opacity: 0; }
+  100% { transform: translateY(0) rotate(0) rotateY(180deg) scale(1); opacity: 1; }
+}
+
+/* Active player's seat breathes with lamplight */
+.opp-active {
+  animation: seat-glow 1.6s ease-in-out infinite;
+}
+@keyframes seat-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(224,179,82,0.0); }
+  50%      { box-shadow: 0 0 18px 4px rgba(224,179,82,0.45); }
+}
+
+/* Title gently floats under the lamp */
+.title-logo {
+  animation: title-float 3.4s ease-in-out infinite alternate;
+}
+@keyframes title-float {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-4px); }
+}
+
+/* Menu cards rise in one after another */
+.menu-card {
+  animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.menu-card:nth-child(1) { animation-delay: 0.08s; }
+.menu-card:nth-child(2) { animation-delay: 0.16s; }
+.menu-card:nth-child(3) { animation-delay: 0.24s; }
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Countdown ring pulses when time runs short */
+.countdown-ring.urgent {
+  animation: ring-urgent 0.8s ease-in-out infinite;
+}
+@keyframes ring-urgent {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.1); }
+}
+
+/* Honor reduced-motion for the cinematic layer too */
+@media (prefers-reduced-motion: reduce) {
+  .screen,
+  .hand-row .hand-slot,
+  .hand-grid .hand-slot,
+  .card.drawn-pop,
+  .card.discard-drop,
+  .opp-active,
+  .title-logo,
+  .menu-card,
+  .countdown-ring.urgent,
+  .glow-flash,
+  .peek-flash,
+  .achievement-banner,
+  .action-spotlight { animation: none; }
 }

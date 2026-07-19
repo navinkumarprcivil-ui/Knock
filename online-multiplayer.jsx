@@ -1348,7 +1348,7 @@ function OnlineGameTable({ roomCode, isHost, myUid, playerList, onBack }) {
           const isSelectable   = canPickTheirSlot;
           const isSwapSelected = isMyTurn && gs.phase === OG_PHASES.POWER_SWAP && swapMine !== null;
           return (
-            <div key={p.uid} style={{
+            <div key={p.uid} className={isActive ? 'opp-active' : ''} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
               padding: '6px 10px', borderRadius: 12,
               background: isActive ? 'rgba(245,200,66,0.2)' : 'rgba(0,0,0,0.2)',
@@ -1361,7 +1361,7 @@ function OnlineGameTable({ roomCode, isHost, myUid, playerList, onBack }) {
                 {presence[p.uid]?.connected === false && <span style={{ fontSize: 9, color: '#ff9999' }}>● off</span>}
                 <span style={{ opacity: 0.5 }}>·{theirHand.length}</span>
               </div>
-              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 180 }}>
+              <div className="hand-grid" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 180 }}>
                 {theirHand.map((c, i) => {
                   const isPeekAnim   = peekAnim?.targetUid === p.uid && peekAnim?.slot === i;
                   const isRevealed   = peekFlash?.uid === p.uid && peekFlash?.slot === i;
@@ -1399,7 +1399,7 @@ function OnlineGameTable({ roomCode, isHost, myUid, playerList, onBack }) {
 
           <div style={{ position: 'relative', minWidth: 64, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             {drawnCard
-              ? <Card card={drawnCard} faceUp size={{ w: 64, h: 90 }} />
+              ? <Card key={drawnCard.id} card={drawnCard} faceUp size={{ w: 64, h: 90 }} className="drawn-pop" />
               : <div style={{ width: 64, height: 90, border: '2px dashed rgba(255,255,255,0.2)', borderRadius: 10 }} />
             }
             <span className="deck-label">DRAWN</span>
@@ -1407,7 +1407,7 @@ function OnlineGameTable({ roomCode, isHost, myUid, playerList, onBack }) {
 
           <div className="discard-stack">
             {discardTop
-              ? <Card card={discardTop} faceUp size={{ w: 56, h: 80 }} />
+              ? <Card key={discardTop.id} card={discardTop} faceUp size={{ w: 56, h: 80 }} className="discard-drop" />
               : <div style={{ width: 56, height: 80, border: '2px dashed rgba(255,255,255,0.2)', borderRadius: 10 }} />
             }
             <span className="deck-label">DISCARD · {(gs.discard || []).length}</span>

@@ -122,8 +122,9 @@ function CountdownRing({ secondsLeft, total, size = 60 }) {
   const c = 2 * Math.PI * r;
   const frac = total > 0 ? Math.max(0, Math.min(1, secondsLeft / total)) : 0;
   const offset = c * (1 - frac);
+  const urgent = secondsLeft > 0 && secondsLeft <= 3;
   return (
-    <div className="countdown-ring" style={{ width: size, height: size, position: 'relative' }}>
+    <div className={"countdown-ring" + (urgent ? ' urgent' : '')} style={{ width: size, height: size, position: 'relative' }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="3" />
         <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--gold)" strokeWidth="3"
