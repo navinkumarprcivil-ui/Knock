@@ -13,7 +13,8 @@ function MainMenu({ onPick }) {
   const modes = [
     { id: 'bots',   label: 'Play vs Bots',              sub: 'Single player against AI',                  emoji: '🤖', tint: 'gold', enabled: true  },
     { id: 'local',  label: 'Single Device Multiplayer', sub: 'Pass the phone around — 2 to 6 players',    emoji: '📱', tint: 'blue', enabled: true  },
-    { id: 'online', label: 'Online Multiplayer',         sub: 'Play with friends · room code',             emoji: '🌐', tint: 'red',  enabled: true  }
+    { id: 'online', label: 'Online Multiplayer',         sub: 'Play with friends · room code',             emoji: '🌐', tint: 'red',  enabled: true  },
+    { id: 'memory', label: 'Memory Match',               sub: 'Bonus game — flip & match the pairs',       emoji: '🃏', tint: 'gold', enabled: true, href: 'memory.html' }
   ];
   return (
     <div className="screen" style={{ justifyContent: 'space-between' }}>
@@ -30,7 +31,12 @@ function MainMenu({ onPick }) {
             <button
               key={m.id}
               className={"menu-card " + m.tint + (m.enabled ? '' : ' disabled')}
-              onClick={() => { if (!m.enabled) return; AudioMgr.playSfx('click'); onPick(m.id); }}
+              onClick={() => {
+                if (!m.enabled) return;
+                AudioMgr.playSfx('click');
+                if (m.href) { window.location.href = m.href; return; }
+                onPick(m.id);
+              }}
             >
               <span className="menu-emoji">{m.emoji}</span>
               <div style={{ flex: 1, textAlign: 'left' }}>
