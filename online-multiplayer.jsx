@@ -1421,7 +1421,7 @@ function OnlineGameTable({ roomCode, isHost, myUid, playerList, onBack }) {
         {isBuzzPhase && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
             <CountdownRing secondsLeft={buzzSecs} total={OG_BUZZ_SECS} size={60} />
-            <div style={{ fontSize: 12, color: 'var(--gold)', letterSpacing: 1 }}>🔔 BUZZ to claim!</div>
+            <div style={{ fontSize: 12, color: '#fff', letterSpacing: 1, background: 'rgba(23,34,59,0.6)', padding: '4px 12px', borderRadius: 999 }}>🔔 BUZZ to claim!</div>
           </div>
         )}
         {gs.phase === OG_PHASES.BUZZ_RESOLVE && (
@@ -1596,7 +1596,7 @@ function OnlineDiscardModal({ hand, drawnCard, onPick, onCancel }) {
         </div>
         <div className="modal-body" style={{ fontSize: 12 }}>
           Tap cards you think match. All must be the same rank.<br />
-          <span style={{ color: '#ff9999' }}>Any wrong → +2 penalty cards.</span>
+          <span style={{ color: '#d63a2f' }}>Any wrong → +2 penalty cards.</span>
         </div>
         <div className="hand-grid" style={{ gridTemplateColumns: `repeat(${Math.min(hand.length, 4)}, auto)` }}>
           {hand.map((c, i) => (

@@ -949,7 +949,7 @@ function GameTable({ players, onGameOver, onMenu, mode = 'bots' }) {
               </button>
             )}
             <div style={{ fontSize: 11, opacity: 0.75, textAlign: 'center' }}>
-              Opt in to discard your <b style={{ color: 'var(--gold)' }}>{drawnCard?.rank}</b>s · once opted you can't undo
+              Opt in to discard your <b style={{ color: '#ffe28a' }}>{drawnCard?.rank}</b>s · once opted you can't undo
             </div>
           </div>
         ) : (
@@ -1035,7 +1035,7 @@ function PhaseIndicator({ phase, drawnCard, drawer, buzzSecondsLeft, powerSecond
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
         <CountdownRing secondsLeft={buzzSecondsLeft} total={BUZZ_SECONDS} size={60} />
-        <div style={{ fontSize: 12, color: 'var(--gold)', letterSpacing: 1 }}>🔔 BUZZ RACE — anyone can buzz!</div>
+        <div style={{ fontSize: 12, color: '#fff', letterSpacing: 1, background: 'rgba(23,34,59,0.6)', padding: '4px 12px', borderRadius: 999 }}>🔔 BUZZ RACE — anyone can buzz!</div>
       </div>
     );
   }
@@ -1193,8 +1193,8 @@ function DiscardSelectOverlay({ player, hand, drawnCard, onPick, onCancel, commi
           </div>
         </div>
         <div className="modal-body" style={{ fontSize: 12 }}>
-          Tap one or more cards. <b style={{ color: 'var(--gold)' }}>All</b> must match.<br/>
-          <span style={{ color: '#ff9999' }}>Any wrong → +2 penalty, no cards removed.</span>
+          Tap one or more cards. <b style={{ color: '#e8760c' }}>All</b> must match.<br/>
+          <span style={{ color: '#d63a2f' }}>Any wrong → +2 penalty, no cards removed.</span>
         </div>
         <div className="hand-grid" style={{ gridTemplateColumns: `repeat(${Math.min(hand.length, 4)}, auto)` }}>
           {hand.map((c, i) => {

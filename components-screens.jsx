@@ -67,9 +67,9 @@ function SetupScreen({ onStart, mode = 'bots', onBack }) {
             <div className="player-row" style={{ marginBottom: 16, background: 'rgba(245,200,66,0.12)', border: '2px solid var(--gold)' }}>
               <PlayerAvatar index={0} name={humanName} />
               <input className="player-input" value={humanName} placeholder="Your name" onChange={(e) => setHumanName(e.target.value)} maxLength={14} />
-              <span style={{ fontSize: 10, color: 'var(--gold)', letterSpacing: 1 }}>HUMAN</span>
+              <span style={{ fontSize: 10, color: '#e8760c', fontWeight: 900, letterSpacing: 1 }}>HUMAN</span>
             </div>
-            <div style={{ textAlign: 'center', marginBottom: 8, fontSize: 12, letterSpacing: 2, color: 'var(--gold)', textTransform: 'uppercase' }}>Total players ({botRoster.length} bots)</div>
+            <div style={{ textAlign: 'center', marginBottom: 8, fontSize: 12, letterSpacing: 2, color: '#fff', textShadow: '0 2px 4px rgba(23,60,90,0.5)', textTransform: 'uppercase' }}>Total players ({botRoster.length} bots)</div>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
               <div className="count-stepper">
                 <button onClick={() => setTotalPlayers(Math.max(3, totalPlayers - 1))} disabled={totalPlayers <= 3}>−</button>
@@ -92,7 +92,7 @@ function SetupScreen({ onStart, mode = 'bots', onBack }) {
           </>
         ) : (
           <>
-            <div style={{ textAlign: 'center', marginBottom: 8, fontSize: 12, letterSpacing: 2, color: 'var(--gold)', textTransform: 'uppercase' }}>Players</div>
+            <div style={{ textAlign: 'center', marginBottom: 8, fontSize: 12, letterSpacing: 2, color: '#fff', textShadow: '0 2px 4px rgba(23,60,90,0.5)', textTransform: 'uppercase' }}>Players</div>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
               <div className="count-stepper">
                 <button onClick={() => setTotalPlayers(Math.max(2, totalPlayers - 1))} disabled={totalPlayers <= 2}>−</button>
@@ -191,7 +191,7 @@ function PeekScreen({ player, hand, onDone }) {
       <div className="title-sub" style={{ letterSpacing: 4, fontSize: 11 }}>PEEK PHASE</div>
       <div className="title-logo" style={{ fontSize: 32 }}>{player.name.toUpperCase()}</div>
       <div style={{ opacity: 0.75, fontSize: 13, maxWidth: 300 }}>
-        Only your <b style={{ color: 'var(--gold)' }}>base cards</b> (bottom row) can be peeked. Tap each one to memorize.
+        Only your <b style={{ color: '#ffe28a', textShadow: '0 1px 3px rgba(23,60,90,0.6)' }}>base cards</b> (bottom row) can be peeked. Tap each one to memorize.
       </div>
       <div className="hand-grid" style={{ gridTemplateColumns: 'repeat(2, auto)', gap: 12 }}>
         {hand.map((c, i) => {
@@ -253,7 +253,7 @@ function HelpModal({ onClose }) {
           <p><b>Turn:</b> Drawer flips top of deck — visible to everyone.</p>
           <p><b>Buzz:</b> Anyone but the drawer races to claim the drawn card and swap it into one of their own slots.</p>
           <div style={{ marginTop: 8, marginBottom: 8, padding: '8px 8px', borderRadius: 12, background: 'rgba(0,0,0,0.25)' }}>
-            <div style={{ fontSize: 10, letterSpacing: 2, color: 'var(--gold)', marginBottom: 4 }}>POWER CARDS</div>
+            <div style={{ fontSize: 10, letterSpacing: 2, color: '#e8760c', marginBottom: 4 }}>POWER CARDS</div>
             {rule('7', '♥', 'Peek your own', '7 or 8 — Peek any one of your own cards')}
             {rule('9', '♠', 'Peek opponent', '9 or 10 — Peek any one opponent card')}
             {rule('J', '♦', 'Swap', 'J, Q, or A — Swap one of your cards with an opponent')}
@@ -327,7 +327,7 @@ function GameOverScreen({ ranking, players, knockerId, knockSuccess, onReplay, o
 
       {/* This match results */}
       <div style={{ width: '100%', maxWidth: 360, marginTop: 4 }}>
-        <div style={{ fontSize: 11, letterSpacing: 2, color: 'var(--gold)', marginBottom: 6 }}>THIS MATCH</div>
+        <div style={{ fontSize: 11, letterSpacing: 2, color: '#fff', textShadow: '0 2px 4px rgba(23,60,90,0.5)', marginBottom: 6 }}>THIS MATCH</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {ranking.map((r, i) => (
             <div key={r.player.id} className="player-row" style={{ padding: '8px 10px', background: i === 0 ? 'rgba(245,200,66,0.18)' : 'rgba(0,0,0,0.25)' }}>
@@ -344,7 +344,7 @@ function GameOverScreen({ ranking, players, knockerId, knockSuccess, onReplay, o
       {/* Scoreboard standings */}
       <div style={{ width: '100%', maxWidth: 360, marginTop: 4 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-          <div style={{ fontSize: 11, letterSpacing: 2, color: 'var(--gold)' }}>SCOREBOARD · MATCH {room.matches}</div>
+          <div style={{ fontSize: 11, letterSpacing: 2, color: '#fff', textShadow: '0 2px 4px rgba(23,60,90,0.5)' }}>SCOREBOARD · MATCH {room.matches}</div>
           <div style={{ fontSize: 10, opacity: 0.55 }}>👑 host: {hostName}</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
